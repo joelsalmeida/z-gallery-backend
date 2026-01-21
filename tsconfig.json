@@ -25,5 +25,6 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "exclude": ["dist", "node_modules", "generated/prisma"]
+  "exclude": ["dist", "node_modules", "generated/prisma"],
+  "include": ["src/**/*", "prisma/prisma.config.ts"]
 }
