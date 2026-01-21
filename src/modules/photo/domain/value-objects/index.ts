@@ -1,0 +1,9 @@
+export { Color } from './color.vo';
+export { FileSize } from './file-size.vo';
+export { PhotoCreationDate } from './photo-creation-date.vo';
+export { PhotoDescription } from './photo-description.vo';
+export { PhotoFile } from './photo-file.vo';
+export { PhotoId } from './photo-id.vo';
+export { PhotoLocation } from './photo-location.vo';
+export { PhotoTitle } from './photo-title.vo';
+// TODO: Add tests.
