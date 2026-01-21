@@ -1,5 +1,5 @@
+import { PrismaService } from '@/modules/shared/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/modules/shared/prisma/prisma.service';
 import { UserRepository } from '../../application/ports/out';
 import { User } from '../../domain/user';
 import { Email, HashedPassword, UserId } from '../../domain/value-objects';
