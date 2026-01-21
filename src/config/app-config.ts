@@ -3,7 +3,11 @@ function loadEnv() {
     JWT_SECRET: process.env.JWT_SECRET,
     JWT_ACCESS_EXPIRATION_IN: process.env.JWT_ACCESS_EXPIRATION_IN,
     JWT_REFRESH_EXPIRATION_IN: process.env.JWT_REFRESH_EXPIRATION_IN,
+
     DATABASE_URL: process.env.DATABASE_URL,
+
+    PHOTO_STORAGE_PATH: process.env.PHOTO_STORAGE_PATH,
+
     PORT: process.env.PORT,
   };
 
@@ -22,9 +26,13 @@ export interface AppConfig {
     accessExpiration: string;
     refreshExpiration: string;
   };
+
+  storage: { path: string };
+
   database: {
     url: string;
   };
+
   port: number;
 }
 
@@ -40,6 +48,7 @@ export const appConfig = (): AppConfig => {
     database: {
       url: env.DATABASE_URL,
     },
+    storage: { path: env.PHOTO_STORAGE_PATH },
     port: parseInt(env.PORT, 10),
   };
 };

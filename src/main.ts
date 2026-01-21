@@ -1,12 +1,13 @@
-import type { INestApplication } from '@nestjs/common';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import type { AppConfig } from './config/app-config';
 
 async function bootstrap(): Promise<void> {
-  const app: INestApplication = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -15,6 +16,10 @@ async function bootstrap(): Promise<void> {
       forbidNonWhitelisted: true,
     }),
   );
+
+  app.useStaticAssets(join(__dirname, '../../uploads'), {
+    prefix: '/uploads/',
+  });
 
   const configService: ConfigService<AppConfig> = app.get(
     ConfigService<AppConfig>,
