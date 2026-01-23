@@ -34,27 +34,24 @@ export class UploadPhotoService implements UploadPhotoUseCase {
     const ownerId = UserId.restore(command.ownerId);
     await this.assertAuthorization(albumId, ownerId);
 
-    const photo = this.createPhoto(albumId, command);
-
-    const imageLocation = await this.photoStorage.store(
-      photo.id.toValue(),
-      command.photoFile,
+    const photoLocation = await this.photoStorage.store(command.photoFile);
+    const photo = this.createPhoto(
+      PhotoLocation.create(photoLocation.toValue()),
+      command,
     );
 
-    photo.updateImageLocation(PhotoLocation.create(imageLocation.toValue()));
     await this.photoRepository.save(photo);
     return photo;
   }
 
-  // TODO: FIX THIS METHOD.
-  private createPhoto(albumId: AlbumId, command: UploadPhotoCommand) {
+  private createPhoto(location: PhotoLocation, command: UploadPhotoCommand) {
     return Photo.create(
-      albumId,
+      AlbumId.restore(command.albumId),
       PhotoTitle.create(command.title),
       PhotoDescription.create(command.description),
-      FileSize.fromBytes(777),
-      Color.fromHex('#777777'),
-      PhotoLocation.create('temp'),
+      FileSize.fromBytes(command.photoFile.size),
+      Color.fromHex('#777777'), // TODO: FIX THIS.
+      location,
       PhotoCreationDate.fromNow(),
     );
   }

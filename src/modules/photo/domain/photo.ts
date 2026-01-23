@@ -41,10 +41,6 @@ export class Photo {
     this._description = description;
   }
 
-  updateImageLocation(location: PhotoLocation) {
-    this._location = location;
-  }
-
   static create(
     albumId: AlbumId,
     title: PhotoTitle,
@@ -52,6 +48,9 @@ export class Photo {
     size: FileSize,
     color: Color,
     location: PhotoLocation,
+    //TODO: Allow a null value in cases where it is not possible
+    // to identify the creation date of the original file.
+    // "createdAt" already serves as the file upload date.
     creationDate: PhotoCreationDate,
   ) {
     return new Photo(
