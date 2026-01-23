@@ -5,11 +5,13 @@ import {
   GetPhotoFileQuery,
 } from '@/modules/photo/application/queries/get-photo-file';
 import {
+  DeletePhotoUseCase,
+  UploadPhotoUseCase,
+} from '@/modules/photo/application/use-cases';
+import {
   DeletePhotoCommand,
   UploadPhotoCommand,
 } from '@/modules/photo/application/use-cases/commands';
-import { DeletePhotoUseCase } from '@/modules/photo/application/use-cases/delete-photo.use-case';
-import { UploadPhotoUseCase } from '@/modules/photo/application/use-cases/upload-photo.use-case';
 import { PhotoFile } from '@/modules/photo/domain/value-objects';
 import {
   BadRequestException,
@@ -25,10 +27,20 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadPhotoResponse } from './dtos/responses.types';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { UploadPhotoInput, UploadPhotoResponseDto } from './dtos';
 
-@Controller()
+@ApiTags('photos')
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
+@Controller()
 export class PhotoController {
   constructor(
     private readonly uploadPhotoService: UploadPhotoUseCase,
@@ -36,20 +48,18 @@ export class PhotoController {
     private readonly getPhotoFileHandler: GetPhotoFile,
   ) {}
 
-  // TODO: Limit image sizes.
-  @Post('upload')
+  // =========================
+  // Upload photo
+  // =========================
   @UseInterceptors(FileInterceptor('file'))
+  @Post('upload')
+  @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({ type: UploadPhotoResponseDto })
   async upload(
     @UploadedFile() file: Express.Multer.File,
-    @Body()
-    body: {
-      title: string;
-      description: string;
-      albumId: string;
-      ownerId: string;
-    },
+    @Body() body: UploadPhotoInput,
     @GetAuthUserId() ownerId: string,
-  ): Promise<UploadPhotoResponse> {
+  ): Promise<UploadPhotoResponseDto> {
     if (!file) throw new BadRequestException('No file uploaded');
 
     const photoFile = PhotoFile.create(
@@ -80,7 +90,13 @@ export class PhotoController {
     };
   }
 
+  // =========================
+  // Get photo file (stream)
+  // =========================
   @Get(':photoId')
+  @ApiOkResponse({
+    description: 'Returns the photo file as a stream',
+  })
   async getById(
     @Param('photoId') photoId: string,
     @GetAuthUserId() ownerId: string,
@@ -94,7 +110,13 @@ export class PhotoController {
     });
   }
 
+  // =========================
+  // Delete photo
+  // =========================
   @Delete(':photoId')
+  @ApiNoContentResponse({
+    description: 'Photo deleted successfully',
+  })
   async delete(
     @Param('photoId') photoId: string,
     @GetAuthUserId() ownerId: string,

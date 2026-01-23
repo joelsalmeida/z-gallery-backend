@@ -1,4 +1,5 @@
 import { Body, Controller, Post, UseFilters } from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { RefreshTokenUserUseCase } from 'src/modules/auth/application/use-cases/refresh-token.use-case';
 import {
   AuthenticateUserUseCase,
@@ -6,17 +7,16 @@ import {
 } from '../../../application/use-cases';
 import {
   AuthenticateUserInput,
+  AuthenticationResponseDto,
   RefreshTokenInput,
+  RefreshTokenResponseDto,
   RegisterUserInput,
 } from './dtos';
-import type {
-  AuthenticationResponse,
-  RefreshTokenResponse,
-} from './dtos/responses.types';
 import { AuthExceptionFilter } from './filters/auth-exception.filter';
 
-@Controller()
+@ApiTags('auth')
 @UseFilters(AuthExceptionFilter)
+@Controller()
 export class AuthController {
   constructor(
     private readonly registerUserService: RegisterUserUseCase,
@@ -24,11 +24,15 @@ export class AuthController {
     private readonly refreshTokenService: RefreshTokenUserUseCase,
   ) {}
 
+  // =========================
+  // Register
+  // =========================
   @Post('register')
+  @ApiOkResponse({ type: AuthenticationResponseDto })
   async register(
     @Body()
     input: RegisterUserInput,
-  ): Promise<AuthenticationResponse> {
+  ): Promise<AuthenticationResponseDto> {
     const data = await this.registerUserService.execute(input);
 
     return {
@@ -38,11 +42,15 @@ export class AuthController {
     };
   }
 
+  // =========================
+  // Login
+  // =========================
   @Post('login')
+  @ApiOkResponse({ type: AuthenticationResponseDto })
   async login(
     @Body()
     input: AuthenticateUserInput,
-  ): Promise<AuthenticationResponse> {
+  ): Promise<AuthenticationResponseDto> {
     const data = await this.authenticateUserService.execute(input);
 
     return {
@@ -52,11 +60,15 @@ export class AuthController {
     };
   }
 
+  // =========================
+  // Refresh
+  // =========================
   @Post('refresh')
+  @ApiOkResponse({ type: RefreshTokenResponseDto })
   async refresh(
     @Body()
     input: RefreshTokenInput,
-  ): Promise<RefreshTokenResponse> {
+  ): Promise<RefreshTokenResponseDto> {
     const data = await this.refreshTokenService.execute(input);
 
     return {

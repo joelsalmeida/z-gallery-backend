@@ -4,8 +4,8 @@ import { JwtAuthGuard } from 'src/modules/auth/infrastructure/http/controller/gu
 import { FindUserByEmailUseCase } from '../../../application/use-cases';
 import { UserResponse } from './dtos/responses.types';
 
-@Controller()
 @UseGuards(JwtAuthGuard)
+@Controller()
 export class UserController {
   constructor(private readonly findByEmailService: FindUserByEmailUseCase) {}
 

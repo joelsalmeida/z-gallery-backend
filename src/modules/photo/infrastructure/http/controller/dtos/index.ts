@@ -1,1 +1,2 @@
-export { UploadPhotoInput } from './upload-photo.input';
+export { UploadPhotoInput } from './inputs.dto';
+export { UploadPhotoResponseDto } from './responses.dto';

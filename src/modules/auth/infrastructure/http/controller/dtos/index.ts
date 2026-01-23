@@ -1,3 +1,10 @@
-export { AuthenticateUserInput } from './authenticate-user.input';
-export { RefreshTokenInput } from './refresh-token.input';
-export { RegisterUserInput } from './register-user.input';
+export {
+  AuthenticateUserInput,
+  RefreshTokenInput,
+  RegisterUserInput,
+} from './inputs.dto';
+
+export {
+  AuthenticationResponseDto,
+  RefreshTokenResponseDto,
+} from './responses.dto';

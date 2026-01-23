@@ -9,6 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import {
   CreateAlbumUseCase,
   DeleteAlbumUseCase,
 } from '../../../application/use-cases';
@@ -16,22 +23,27 @@ import {
   CreateAlbumCommand,
   DeleteAlbumCommand,
 } from '../../../application/use-cases/commands';
-import { CreateAlbumInput } from './dtos';
+import { CreateAlbumInput, CreateAlbumResponseDto } from './dtos';
 
-// TODO: Add filter.
-@Controller()
+@ApiTags('albums')
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
+@Controller()
 export class AlbumController {
   constructor(
     private readonly createAlbumService: CreateAlbumUseCase,
     private readonly deleteAlbumService: DeleteAlbumUseCase,
   ) {}
 
+  // =========================
+  // Create album
+  // =========================
   @Post()
+  @ApiCreatedResponse({ type: CreateAlbumResponseDto })
   async create(
     @Body() input: CreateAlbumInput,
     @GetAuthUserId() ownerId: string,
-  ) {
+  ): Promise<CreateAlbumResponseDto> {
     const album = await this.createAlbumService.execute(
       new CreateAlbumCommand(ownerId, input.title, input.description),
     );
@@ -44,7 +56,13 @@ export class AlbumController {
     };
   }
 
+  // =========================
+  // Delete album
+  // =========================
   @Delete(':id')
+  @ApiNoContentResponse({
+    description: 'Album deleted successfully',
+  })
   async delete(
     @Param('id') albumId: string,
     @GetAuthUserId() ownerId: string,
