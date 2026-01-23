@@ -22,6 +22,10 @@ export class PhotoFile {
 
     if (INVALID_FILE_NAME) throw new InvalidPhotoFileNameException();
 
-    return new PhotoFile(buffer, mimeType, fileName.trim());
+    return new PhotoFile(Buffer.from(buffer), mimeType, fileName.trim());
+  }
+
+  get size(): number {
+    return this.buffer.length;
   }
 }
