@@ -1,6 +1,10 @@
 import { GetAuthUserId } from '@/modules/auth/infrastructure/http/controller/decorators';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/http/controller/guards';
 import {
+  GetPhotoFile,
+  GetPhotoFileQuery,
+} from '@/modules/photo/application/queries/get-photo-file';
+import {
   DeletePhotoCommand,
   UploadPhotoCommand,
 } from '@/modules/photo/application/use-cases/commands';
@@ -12,8 +16,10 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -21,29 +27,20 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadPhotoResponse } from './dtos/responses.types';
 
-// TODO: Move this.
-type UploadedFile = {
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  buffer: Buffer;
-  size: number;
-  path?: string;
-};
-
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class PhotoController {
   constructor(
     private readonly uploadPhotoService: UploadPhotoUseCase,
     private readonly deletePhotoService: DeletePhotoUseCase,
+    private readonly getPhotoFileHandler: GetPhotoFile,
   ) {}
 
   // TODO: Limit image sizes.
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
-    @UploadedFile() file: UploadedFile,
+    @UploadedFile() file: Express.Multer.File,
     @Body()
     body: {
       title: string;
@@ -81,6 +78,20 @@ export class PhotoController {
       location: photo.location.toValue(),
       creationDate: photo.creationDate.toValue(),
     };
+  }
+
+  @Get(':photoId')
+  async getById(
+    @Param('photoId') photoId: string,
+    @GetAuthUserId() ownerId: string,
+  ): Promise<StreamableFile> {
+    const query = new GetPhotoFileQuery(photoId, ownerId);
+    const stream = await this.getPhotoFileHandler.execute(query);
+
+    return new StreamableFile(stream.stream, {
+      type: stream.contentType,
+      length: stream.size,
+    });
   }
 
   @Delete(':photoId')

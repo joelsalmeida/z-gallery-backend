@@ -4,11 +4,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AlbumModule } from '../album/album.module';
 import { PhotoRepository, PhotoStoragePort } from './application/ports/out';
+import { GetPhotoFileHandler } from './application/queries/get-photo-file/get-photo-file.handler';
 import { DeletePhotoService, UploadPhotoService } from './application/services';
 import {
   DeletePhotoUseCase,
   UploadPhotoUseCase,
 } from './application/use-cases';
+
+import { GetPhotoFile } from './application/queries/get-photo-file';
 import { PhotoController } from './infrastructure/http/controller/photo.controller';
 import { PrismaPhotoRepository } from './infrastructure/persistence/prisma-photo.repository';
 
@@ -32,6 +35,10 @@ import { PrismaPhotoRepository } from './infrastructure/persistence/prisma-photo
     {
       provide: DeletePhotoUseCase,
       useClass: DeletePhotoService,
+    },
+    {
+      provide: GetPhotoFile,
+      useClass: GetPhotoFileHandler,
     },
   ],
   exports: [PhotoRepository, PhotoStoragePort, UploadPhotoUseCase],
