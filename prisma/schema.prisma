@@ -14,12 +14,14 @@ datasource db {
 }
 
 model User {
-  id            String         @id @unique @db.VarChar(19)
-  email         String         @unique
-  password      String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id        String   @id @unique @db.VarChar(19)
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   refreshTokens RefreshToken[]
+  albums        Album[]
 }
 
 model RefreshToken {
@@ -41,6 +43,7 @@ model Album {
   updatedAt   DateTime @updatedAt
 
   photos Photo[]
+  owner  User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
 }
