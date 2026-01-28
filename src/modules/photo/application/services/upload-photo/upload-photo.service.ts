@@ -1,15 +1,14 @@
-import { AlbumNotFoundException } from '@/modules/album/application/exceptions';
+import { AlbumAccessPolicyPort } from '@/modules/album/application/ports/out';
 import { AlbumId } from '@/modules/album/domain/value-objects';
 import {
-  AlbumReadPort,
   PhotoRepository,
   PhotoStoragePort,
 } from '@/modules/photo/application/ports/out';
 import { UploadPhotoUseCase } from '@/modules/photo/application/use-cases';
 import { UploadPhotoCommand } from '@/modules/photo/application/use-cases/commands';
 import { UserId } from '@/modules/user/domain/value-objects';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { Photo } from '../../domain/photo';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Photo } from '../../../domain/photo';
 import {
   Color,
   FileSize,
@@ -17,33 +16,31 @@ import {
   PhotoDescription,
   PhotoLocation,
   PhotoTitle,
-} from '../../domain/value-objects';
+} from '../../../domain/value-objects';
 
 @Injectable()
 export class UploadPhotoService implements UploadPhotoUseCase {
   constructor(
     private readonly photoRepository: PhotoRepository,
     private readonly photoStorage: PhotoStoragePort,
-    private readonly albumReadPort: AlbumReadPort,
+    private readonly accessPolicy: AlbumAccessPolicyPort,
   ) {}
 
   async execute(command: UploadPhotoCommand): Promise<Photo> {
     const albumId = AlbumId.restore(command.albumId);
-    await this.assertAlbumExistence(albumId);
+    const userId = UserId.restore(command.ownerId);
 
-    const ownerId = UserId.restore(command.ownerId);
-    await this.assertAuthorization(albumId, ownerId);
+    const canAccess = await this.accessPolicy.canAccessAlbum(albumId, userId);
+    if (!canAccess) throw new ForbiddenException();
 
     const photoLocation = await this.photoStorage.store(command.photoFile);
-    const photo = this.createPhoto(
-      PhotoLocation.create(photoLocation.toValue()),
-      command,
-    );
-
+    const photo = this.createPhoto(photoLocation, command);
     await this.photoRepository.save(photo);
+
     return photo;
   }
 
+  // TODO: Consider using a factory.
   private createPhoto(location: PhotoLocation, command: UploadPhotoCommand) {
     return Photo.create(
       AlbumId.restore(command.albumId),
@@ -54,18 +51,5 @@ export class UploadPhotoService implements UploadPhotoUseCase {
       location,
       PhotoCreationDate.fromNow(),
     );
-  }
-
-  private async assertAuthorization(albumId: AlbumId, ownerId: UserId) {
-    const isOwner = await this.albumReadPort.isOwnedBy(albumId, ownerId);
-    if (!isOwner) throw new UnauthorizedException();
-  }
-
-  private async assertAlbumExistence(albumId: AlbumId) {
-    const albumExists = await this.albumReadPort.existsById(
-      AlbumId.restore(albumId.toValue()),
-    );
-
-    if (!albumExists) throw new AlbumNotFoundException();
   }
 }
