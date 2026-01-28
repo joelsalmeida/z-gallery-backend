@@ -32,7 +32,26 @@ export class PrismaPhotoRepository implements PhotoRepository {
     });
   }
 
-  async findByAlbumId(albumId: AlbumId): Promise<Photo[]> {
+  async findById(id: PhotoId): Promise<Photo | null> {
+    const record = await this.prisma.photo.findUnique({
+      where: { id: id.toValue() },
+    });
+
+    if (!record) return null;
+
+    return Photo.restore(
+      PhotoId.restore(record.id),
+      AlbumId.restore(record.albumId),
+      PhotoTitle.restore(record.title),
+      PhotoDescription.restore(record.description),
+      FileSize.fromBytes(record.size),
+      Color.fromHex(record.predominantColor),
+      PhotoLocation.create(record.location),
+      PhotoCreationDate.fromDate(record.creationDate),
+    );
+  }
+
+  async findAllByAlbumId(albumId: AlbumId): Promise<Photo[]> {
     const records = await this.prisma.photo.findMany({
       where: { albumId: albumId.toValue() },
       orderBy: { creationDate: 'asc' },
@@ -53,34 +72,18 @@ export class PrismaPhotoRepository implements PhotoRepository {
     );
   }
 
-  async findById(id: PhotoId): Promise<Photo | null> {
+  async exists(id: PhotoId): Promise<boolean> {
     const record = await this.prisma.photo.findUnique({
       where: { id: id.toValue() },
+      select: { id: true },
     });
 
-    if (!record) return null;
-
-    return Photo.restore(
-      PhotoId.restore(record.id),
-      AlbumId.restore(record.albumId),
-      PhotoTitle.restore(record.title),
-      PhotoDescription.restore(record.description),
-      FileSize.fromBytes(record.size),
-      Color.fromHex(record.predominantColor),
-      PhotoLocation.create(record.location),
-      PhotoCreationDate.fromDate(record.creationDate),
-    );
+    return record !== null;
   }
 
   async deleteById(id: PhotoId): Promise<void> {
     await this.prisma.photo.delete({
       where: { id: id.toValue() },
-    });
-  }
-
-  countByAlbumId(id: AlbumId): Promise<number> {
-    return this.prisma.photo.count({
-      where: { albumId: id.toValue() },
     });
   }
 }

@@ -30,6 +30,26 @@ export class PrismaAlbumRepository implements AlbumRepository {
     });
   }
 
+  async exists(id: AlbumId): Promise<boolean> {
+    const record = await this.prisma.album.findUnique({
+      where: { id: id.toValue() },
+      select: { id: true },
+    });
+
+    return record !== null;
+  }
+
+  async isOwnedBy(albumId: AlbumId, ownerId: UserId): Promise<boolean> {
+    const count = await this.prisma.album.count({
+      where: {
+        id: albumId.toValue(),
+        ownerId: ownerId.toValue(),
+      },
+    });
+
+    return count > 0;
+  }
+
   async findByOwner(ownerId: UserId): Promise<Album[]> {
     const records = await this.prisma.album.findMany({
       where: {
@@ -53,24 +73,6 @@ export class PrismaAlbumRepository implements AlbumRepository {
   async findById(id: AlbumId): Promise<Album | null> {
     const record = await this.prisma.album.findUnique({
       where: { id: id.toValue() },
-    });
-
-    if (!record) return null;
-
-    return Album.restore(
-      AlbumId.restore(record.id),
-      UserId.restore(record.ownerId),
-      AlbumTitle.restore(record.title),
-      AlbumDescription.restore(record.description),
-    );
-  }
-
-  async findByIdAndOwner(id: AlbumId, ownerId: UserId): Promise<Album | null> {
-    const record = await this.prisma.album.findFirst({
-      where: {
-        id: id.toValue(),
-        ownerId: ownerId.toValue(),
-      },
     });
 
     if (!record) return null;
