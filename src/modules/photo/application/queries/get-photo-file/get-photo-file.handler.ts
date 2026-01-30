@@ -4,7 +4,7 @@ import { GetPhotoFile, GetPhotoFileQuery } from '.';
 import { PhotoId } from '../../../domain/value-objects';
 import { PhotoNotFoundException } from '../../exceptions';
 import {
-  AlbumReadPort,
+  PhotoAccessPolicyPort,
   PhotoRepository,
   PhotoStoragePort,
 } from '../../ports/out';
@@ -15,20 +15,20 @@ export class GetPhotoFileHandler implements GetPhotoFile {
   constructor(
     private readonly photoRepository: PhotoRepository,
     private readonly photoStorage: PhotoStoragePort,
-    private readonly albumRead: AlbumReadPort,
+    private readonly accessPolicy: PhotoAccessPolicyPort,
   ) {}
 
   async execute(command: GetPhotoFileQuery): Promise<PhotoFileStream> {
-    const photo = await this.photoRepository.findById(
-      PhotoId.restore(command.photoId),
-    );
+    const photoId = PhotoId.restore(command.photoId);
+    const photo = await this.photoRepository.findById(photoId);
     if (!photo) throw new PhotoNotFoundException();
 
-    const authorizedUser = await this.albumRead.isOwnedBy(
-      photo.albumId,
-      UserId.restore(command.requester),
+    const userId = UserId.restore(command.userId);
+    const isAuthorized = await this.accessPolicy.canAccessPhoto(
+      photoId,
+      userId,
     );
-    if (!authorizedUser) throw new ForbiddenException();
+    if (!isAuthorized) throw new ForbiddenException();
 
     return await this.photoStorage.read(photo.location);
   }
