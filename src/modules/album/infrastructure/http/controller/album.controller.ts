@@ -1,9 +1,14 @@
+import {
+  GetAlbums,
+  GetAlbumsQuery,
+} from '@/modules/album/application/queries/get-albums';
 import { GetAuthUserId } from '@/modules/auth/infrastructure/http/controller/decorators';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/http/controller/guards';
 import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   UseGuards,
@@ -12,9 +17,9 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
+  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-
 import {
   CreateAlbumUseCase,
   DeleteAlbumUseCase,
@@ -24,6 +29,7 @@ import {
   DeleteAlbumCommand,
 } from '../../../application/use-cases/commands';
 import { CreateAlbumInput, CreateAlbumResponseDto } from './dtos';
+import { GetAlbumsResponseDto } from './dtos/responses.dto';
 
 @ApiTags('albums')
 @ApiBearerAuth('access-token')
@@ -33,6 +39,7 @@ export class AlbumController {
   constructor(
     private readonly createAlbumService: CreateAlbumUseCase,
     private readonly deleteAlbumService: DeleteAlbumUseCase,
+    private readonly getAlbumsHandler: GetAlbums,
   ) {}
 
   // =========================
@@ -70,5 +77,16 @@ export class AlbumController {
     await this.deleteAlbumService.execute(
       new DeleteAlbumCommand(albumId, ownerId),
     );
+  }
+
+  // =========================
+  // Get albums
+  // =========================
+  @Get()
+  @ApiOkResponse({ type: GetAlbumsResponseDto, isArray: true })
+  async getAlbums(
+    @GetAuthUserId() ownerId: string,
+  ): Promise<GetAlbumsResponseDto[]> {
+    return await this.getAlbumsHandler.execute(new GetAlbumsQuery(ownerId));
   }
 }

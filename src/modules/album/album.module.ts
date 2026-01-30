@@ -11,8 +11,9 @@ import { AlbumController } from '@/modules/album/infrastructure/http/controller/
 import { PrismaAlbumRepository } from '@/modules/album/infrastructure/persistence/prisma-album.repository';
 import { PrismaService } from '@/modules/shared/prisma/prisma.service';
 import { Module } from '@nestjs/common';
-import { AlbumReadPort } from '../photo/application/ports/out';
-import { PrismaAlbumReadRepository } from './infrastructure/persistence/prisma-album-read.repository';
+import { AlbumViewRepository } from './application/ports/out';
+import { GetAlbums, GetAlbumsHandler } from './application/queries/get-albums';
+import { PrismaAlbumViewRepository } from './infrastructure/persistence/prisma-album-view.repository';
 
 @Module({
   controllers: [AlbumController],
@@ -23,8 +24,8 @@ import { PrismaAlbumReadRepository } from './infrastructure/persistence/prisma-a
       useClass: PrismaAlbumRepository,
     },
     {
-      provide: AlbumReadPort,
-      useClass: PrismaAlbumReadRepository,
+      provide: AlbumViewRepository,
+      useClass: PrismaAlbumViewRepository,
     },
     {
       provide: CreateAlbumUseCase,
@@ -34,7 +35,8 @@ import { PrismaAlbumReadRepository } from './infrastructure/persistence/prisma-a
       provide: DeleteAlbumUseCase,
       useClass: DeleteAlbumService,
     },
+    { provide: GetAlbums, useClass: GetAlbumsHandler },
   ],
-  exports: [AlbumRepository, AlbumReadPort],
+  exports: [AlbumRepository],
 })
 export class AlbumModule {}
