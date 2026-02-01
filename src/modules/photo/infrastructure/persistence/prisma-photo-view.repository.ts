@@ -35,14 +35,14 @@ export class PrismaPhotoViewRepository implements PhotoViewRepository {
     }));
   }
 
-  // TODO: Return path from thumbnail when implemented.
   async findThumbnailsByAlbum(albumId: AlbumId): Promise<PhotoThumbnailView[]> {
     const photos = await this.prisma.photo.findMany({
       where: { albumId: albumId.toValue() },
     });
 
     return photos.map((photo) => ({
-      thumbnailUrl: photo.location,
+      photoId: photo.id,
+      thumbnailUrl: photo.thumbnailLocation,
     }));
   }
 

@@ -8,8 +8,10 @@ import {
   PhotoId,
   PhotoLocation,
   PhotoTitle,
+  ThumbnailLocation,
 } from '@/modules/photo/domain/value-objects';
 import { PrismaService } from '@/modules/shared/prisma/prisma.service';
+
 import { Injectable } from '@nestjs/common';
 import { PhotoRepository } from '../../application/ports/out';
 
@@ -28,6 +30,20 @@ export class PrismaPhotoRepository implements PhotoRepository {
         predominantColor: photo.predominantColor.toValue(),
         location: photo.location.toValue(),
         creationDate: photo.creationDate.toValue(),
+        thumbnailLocation: photo.thumbnailLocation?.toValue(),
+      },
+    });
+  }
+
+  async update(photo: Photo): Promise<void> {
+    await this.prisma.photo.update({
+      where: { id: photo.id.toValue() },
+      data: {
+        thumbnailLocation: photo.thumbnailLocation
+          ? photo.thumbnailLocation.toValue()
+          : null,
+        title: photo.title.toValue(),
+        description: photo.description.toValue(),
       },
     });
   }
@@ -48,6 +64,9 @@ export class PrismaPhotoRepository implements PhotoRepository {
       Color.fromHex(record.predominantColor),
       PhotoLocation.create(record.location),
       PhotoCreationDate.fromDate(record.creationDate),
+      record.thumbnailLocation
+        ? ThumbnailLocation.restore(record.thumbnailLocation)
+        : null,
     );
   }
 

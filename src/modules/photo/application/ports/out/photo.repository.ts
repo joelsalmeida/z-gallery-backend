@@ -9,6 +9,8 @@ export abstract class PhotoRepository {
 
   abstract save(photo: Photo): Promise<void>;
 
+  abstract update(photo: Photo): Promise<void>;
+
   abstract findById(id: PhotoId): Promise<Photo | null>;
 
   abstract findAllByAlbumId(albumId: AlbumId): Promise<Photo[]>;
