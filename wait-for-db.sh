@@ -3,8 +3,7 @@ set -e
 
 echo "⏳ Waiting for PostgreSQL..."
 
-# Use the DB_HOST and DB_PORT from .env
-until pg_isready -h "$DB_HOST" -p "$DB_PORT"; do
+until pg_isready -h "$DB_HOST" -p "$POSTGRES_PORT"; do
   sleep 1
 done
 
