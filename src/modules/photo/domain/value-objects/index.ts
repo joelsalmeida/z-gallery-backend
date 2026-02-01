@@ -6,4 +6,4 @@ export { PhotoFile } from './photo-file.vo';
 export { PhotoId } from './photo-id.vo';
 export { PhotoLocation } from './photo-location.vo';
 export { PhotoTitle } from './photo-title.vo';
-// TODO: Add tests.
+export { ThumbnailLocation } from './thumbnail-location.vo';

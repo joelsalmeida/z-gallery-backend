@@ -49,16 +49,17 @@ model Album {
 }
 
 model Photo {
-  id               String   @id
-  albumId          String
-  title            String
-  description      String
-  size             Int
-  predominantColor String
-  location         String
-  creationDate     DateTime
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String   @id
+  albumId           String
+  title             String
+  description       String
+  size              Int
+  predominantColor  String
+  location          String
+  thumbnailLocation String?
+  creationDate      DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   album Album @relation(fields: [albumId], references: [id], onDelete: Restrict)
 

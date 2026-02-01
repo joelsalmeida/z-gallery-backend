@@ -7,6 +7,7 @@ import {
   PhotoId,
   PhotoLocation,
   PhotoTitle,
+  ThumbnailLocation,
 } from './value-objects';
 
 export class Photo {
@@ -19,6 +20,7 @@ export class Photo {
     public readonly predominantColor: Color,
     private _location: PhotoLocation,
     public readonly creationDate: PhotoCreationDate,
+    private _thumbnailLocation: ThumbnailLocation | null = null,
   ) {}
 
   get title(): PhotoTitle {
@@ -33,12 +35,20 @@ export class Photo {
     return this._location;
   }
 
+  get thumbnailLocation(): ThumbnailLocation | null {
+    return this._thumbnailLocation;
+  }
+
   changeTitle(title: PhotoTitle) {
     this._title = title;
   }
 
   changeDescription(description: PhotoDescription) {
     this._description = description;
+  }
+
+  attachThumbnail(location: ThumbnailLocation) {
+    this._thumbnailLocation = location;
   }
 
   static create(
@@ -74,6 +84,7 @@ export class Photo {
     color: Color,
     location: PhotoLocation,
     creationDate: PhotoCreationDate,
+    thumbnailLocation: ThumbnailLocation | null = null,
   ) {
     return new Photo(
       id,
@@ -84,6 +95,7 @@ export class Photo {
       color,
       location,
       creationDate,
+      thumbnailLocation,
     );
   }
 }

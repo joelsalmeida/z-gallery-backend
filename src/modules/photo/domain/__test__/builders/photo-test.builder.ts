@@ -8,6 +8,7 @@ import {
   PhotoId,
   PhotoLocation,
   PhotoTitle,
+  ThumbnailLocation,
 } from '../../value-objects';
 
 export class PhotoTestBuilder {
@@ -38,7 +39,7 @@ export class PhotoTestBuilder {
   }
 
   build(): Photo {
-    return Photo.restore(
+    const photo = Photo.restore(
       this.id,
       this.albumId,
       this.title,
@@ -48,5 +49,9 @@ export class PhotoTestBuilder {
       this.location,
       this.creationDate,
     );
+
+    photo.attachThumbnail(ThumbnailLocation.create('thumb-location'));
+
+    return photo;
   }
 }
