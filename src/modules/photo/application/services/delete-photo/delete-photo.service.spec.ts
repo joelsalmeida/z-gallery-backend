@@ -1,3 +1,4 @@
+import { PhotoDeletedEvent } from '@/modules/photo/domain/events';
 import { PhotoNotFoundException } from '../../exceptions';
 import { PhotoOwnershipException } from '../exceptions';
 import {
@@ -11,6 +12,7 @@ const expectNoSideEffects = (
 ) => {
   expect(harness.photoStorage.delete).not.toHaveBeenCalled();
   expect(harness.photoRepository.deleteById).not.toHaveBeenCalled();
+  expect(harness.eventEmitter.emit).not.toHaveBeenCalled();
 };
 
 describe('DeletePhotoService – execute', () => {
@@ -61,6 +63,23 @@ describe('DeletePhotoService – execute', () => {
         harness.photoRepository.deleteById.mock.invocationCallOrder[0];
 
       expect(storageCallOrder).toBeLessThan(repoCallOrder);
+    });
+
+    it('emits the "photo deleted event"', async () => {
+      const harness = buildDeletePhotoHarness();
+      const fixture = buildDeletePhotoFixture();
+
+      harness.photoRepository.findById.mockResolvedValueOnce(fixture.photo);
+      harness.accessPolicy.canAccessPhoto.mockResolvedValueOnce(true);
+      harness.photoStorage.delete.mockResolvedValueOnce();
+      harness.photoRepository.deleteById.mockResolvedValueOnce();
+
+      await harness.service.execute(buildDeletePhotoCommand());
+
+      expect(harness.eventEmitter.emit).toHaveBeenCalledWith(
+        PhotoDeletedEvent.name,
+        expect.any(PhotoDeletedEvent),
+      );
     });
   });
 

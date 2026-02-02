@@ -6,8 +6,10 @@ import {
 } from '@/modules/photo/application/ports/out';
 import { UploadPhotoUseCase } from '@/modules/photo/application/use-cases';
 import { UploadPhotoCommand } from '@/modules/photo/application/use-cases/commands';
+import { PhotoUploadedEvent } from '@/modules/photo/domain/events/photo-uploaded.event';
 import { UserId } from '@/modules/user/domain/value-objects';
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Photo } from '../../../domain/photo';
 import {
   Color,
@@ -24,6 +26,7 @@ export class UploadPhotoService implements UploadPhotoUseCase {
     private readonly photoRepository: PhotoRepository,
     private readonly photoStorage: PhotoStoragePort,
     private readonly accessPolicy: AlbumAccessPolicyPort,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: UploadPhotoCommand): Promise<Photo> {
@@ -35,7 +38,13 @@ export class UploadPhotoService implements UploadPhotoUseCase {
 
     const photoLocation = await this.photoStorage.store(command.photoFile);
     const photo = this.createPhoto(photoLocation, command);
+
     await this.photoRepository.save(photo);
+
+    this.eventEmitter.emit(
+      PhotoUploadedEvent.name,
+      new PhotoUploadedEvent(photo.id),
+    );
 
     return photo;
   }

@@ -1,3 +1,4 @@
+import { PhotoUploadedEvent } from '@/modules/photo/domain/events';
 import { Photo } from '@/modules/photo/domain/photo';
 import { PhotoLocation } from '@/modules/photo/domain/value-objects';
 import { buildUploadPhotoFixture, buildUploadPhotoHarness } from './__test__';
@@ -94,6 +95,19 @@ describe('UploadPhotoService – execute', () => {
 
       expect(photo.location.toValue()).toBe(storedLocation.toValue());
     });
+
+    it('emits the "photo uploaded event"', async () => {
+      const storedLocation = PhotoLocation.create('photos/test.jpg');
+      harness.photoStorage.store.mockResolvedValueOnce(storedLocation);
+      harness.accessPolicy.canAccessAlbum.mockResolvedValueOnce(true);
+
+      await harness.service.execute(fixture.command);
+
+      expect(harness.eventEmitter.emit).toHaveBeenCalledWith(
+        PhotoUploadedEvent.name,
+        expect.any(PhotoUploadedEvent),
+      );
+    });
   });
 
   describe('negative paths', () => {
@@ -114,6 +128,7 @@ describe('UploadPhotoService – execute', () => {
 
       await expect(act).rejects.toThrow(storageError);
       expect(harness.photoRepository.save).not.toHaveBeenCalled();
+      expect(harness.eventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it('propagates error when photoRepository.save throws', async () => {
@@ -129,6 +144,7 @@ describe('UploadPhotoService – execute', () => {
       expect(harness.photoStorage.store).toHaveBeenCalledWith(
         fixture.photoFile,
       );
+      expect(harness.eventEmitter.emit).not.toHaveBeenCalled();
     });
   });
 });
