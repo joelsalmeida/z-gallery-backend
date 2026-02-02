@@ -1,9 +1,25 @@
+import { AlbumOwnershipGuard } from '@/modules/album/infrastructure/http/controller/guards';
 import { GetAuthUserId } from '@/modules/auth/infrastructure/http/controller/decorators';
 import { JwtAuthGuard } from '@/modules/auth/infrastructure/http/controller/guards';
+import {
+  GetPhoto,
+  GetPhotoQuery,
+} from '@/modules/photo/application/queries/get-photo';
 import {
   GetPhotoFile,
   GetPhotoFileQuery,
 } from '@/modules/photo/application/queries/get-photo-file';
+import {
+  GetPhotoThumbnails,
+  GetPhotoThumbnailsQuery,
+} from '@/modules/photo/application/queries/get-photo-thumbnails';
+import type { PhotoThumbnailView } from '@/modules/photo/application/queries/get-photo-thumbnails/photo-thumbnails.view.type';
+import {
+  GetPhotosTable,
+  GetPhotosTableQuery,
+} from '@/modules/photo/application/queries/get-photos-table';
+import type { PhotoTableRowView } from '@/modules/photo/application/queries/get-photos-table/photo-table-row.view.type';
+import { GetThumbnailFile } from '@/modules/photo/application/queries/get-thumbnail-file';
 import {
   DeletePhotoUseCase,
   UploadPhotoUseCase,
@@ -36,16 +52,25 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UploadPhotoInput, UploadPhotoResponseDto } from './dtos';
+import {
+  PhotoDetailsDto,
+  PhotoTableRowDto,
+  PhotoThumbnailDto,
+} from './dtos/responses.dto';
 
 @ApiTags('photos')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, AlbumOwnershipGuard)
 @Controller()
 export class PhotoController {
   constructor(
     private readonly uploadPhotoService: UploadPhotoUseCase,
     private readonly deletePhotoService: DeletePhotoUseCase,
     private readonly getPhotoFileHandler: GetPhotoFile,
+    private readonly getThumbnailFileHandler: GetThumbnailFile,
+    private readonly getPhotosTableHandler: GetPhotosTable,
+    private readonly getPhotoThumbnailsHandler: GetPhotoThumbnails,
+    private readonly getPhotoHandler: GetPhoto,
   ) {}
 
   // =========================
@@ -56,6 +81,7 @@ export class PhotoController {
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({ type: UploadPhotoResponseDto })
   async upload(
+    @Param('albumId') albumId: string,
     @UploadedFile() file: Express.Multer.File,
     @Body() body: UploadPhotoInput,
     @GetAuthUserId() ownerId: string,
@@ -70,7 +96,7 @@ export class PhotoController {
 
     const command = new UploadPhotoCommand(
       photoFile,
-      body.albumId,
+      albumId,
       ownerId,
       body.title,
       body.description,
@@ -91,18 +117,94 @@ export class PhotoController {
   }
 
   // =========================
-  // Get photo file (stream)
+  // Table view (metadata only)
+  // =========================
+  @Get('table')
+  @ApiOkResponse({ type: PhotoTableRowDto, isArray: true })
+  async getTable(
+    @Param('albumId') albumId: string,
+    @GetAuthUserId() ownerId: string,
+  ): Promise<PhotoTableRowView[]> {
+    return this.getPhotosTableHandler.execute(
+      new GetPhotosTableQuery(albumId, ownerId),
+    );
+  }
+
+  // =========================
+  // Thumbnail view (images only)
+  // =========================
+  @Get('thumbnails')
+  @ApiOkResponse({ type: PhotoThumbnailDto, isArray: true })
+  async getThumbnails(
+    @Param('albumId') albumId: string,
+    @GetAuthUserId() ownerId: string,
+  ): Promise<PhotoThumbnailView[]> {
+    return this.getPhotoThumbnailsHandler.execute(
+      new GetPhotoThumbnailsQuery(albumId, ownerId),
+    );
+  }
+
+  // =========================
+  // Get photo details (metadata)
   // =========================
   @Get(':photoId')
+  @ApiOkResponse({ type: PhotoDetailsDto })
+  async getDetails(
+    @Param('albumId') albumId: string,
+    @Param('photoId') photoId: string,
+    @GetAuthUserId() ownerId: string,
+  ): Promise<PhotoDetailsDto> {
+    const photo = await this.getPhotoHandler.execute(
+      new GetPhotoQuery(albumId, photoId, ownerId),
+    );
+
+    return {
+      id: photo.id,
+      albumId: photo.albumId,
+      title: photo.title,
+      description: photo.description,
+      size: photo.size,
+      predominantColor: photo.predominantColor,
+      creationDate: photo.creationDate,
+      uploadDate: photo.uploadDate,
+    };
+  }
+
+  // =========================
+  // Get photo file (stream)
+  // =========================
+  @Get(':photoId/file')
   @ApiOkResponse({
     description: 'Returns the photo file as a stream',
   })
   async getById(
+    @Param('albumId') albumId: string,
     @Param('photoId') photoId: string,
     @GetAuthUserId() ownerId: string,
   ): Promise<StreamableFile> {
-    const query = new GetPhotoFileQuery(photoId, ownerId);
+    const query = new GetPhotoFileQuery(albumId, photoId, ownerId);
     const stream = await this.getPhotoFileHandler.execute(query);
+
+    return new StreamableFile(stream.stream, {
+      type: stream.contentType,
+      length: stream.size,
+    });
+  }
+
+  // =========================
+  // Get thumbnail file (stream)
+  // =========================
+  @Get(':photoId/file/thumb')
+  @ApiOkResponse({
+    description: 'Returns the thumbnail file as a stream',
+  })
+  async getThumbById(
+    @Param('albumId') albumId: string,
+    @Param('photoId') photoId: string,
+    @GetAuthUserId() ownerId: string,
+  ): Promise<StreamableFile> {
+    const query = new GetPhotoFileQuery(albumId, photoId, ownerId);
+    const stream = await this.getThumbnailFileHandler.execute(query);
 
     return new StreamableFile(stream.stream, {
       type: stream.contentType,
@@ -118,10 +220,11 @@ export class PhotoController {
     description: 'Photo deleted successfully',
   })
   async delete(
+    @Param('albumId') albumId: string,
     @Param('photoId') photoId: string,
     @GetAuthUserId() ownerId: string,
   ): Promise<void> {
-    const command = new DeletePhotoCommand(photoId, ownerId);
+    const command = new DeletePhotoCommand(albumId, photoId, ownerId);
     await this.deletePhotoService.execute(command);
   }
 }
