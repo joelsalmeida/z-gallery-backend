@@ -79,7 +79,11 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: z-gallery-worker
-    command: node -r tsconfig-paths/register -r ts-node/register src/main.worker.ts
+    command: >
+      sh -c "
+      npx prisma generate &&
+      node -r tsconfig-paths/register -r ts-node/register src/main.worker.ts
+      "
     depends_on:
       - redis
     volumes:
