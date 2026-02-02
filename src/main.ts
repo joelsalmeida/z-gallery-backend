@@ -1,10 +1,15 @@
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { RequestHandler } from 'express';
 import { AppModule } from './app.module';
 import type { AppConfig } from './config/app-config';
+import { BullThumbnailQueue } from './queues/thumbnails/infrastructure/bull/bull-thumbnail.queue';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -20,6 +25,22 @@ async function bootstrap(): Promise<void> {
   const configService: ConfigService<AppConfig> = app.get(
     ConfigService<AppConfig>,
   );
+
+  // TODO: dev only.
+  const bullThumbnailsQueue = app.get(BullThumbnailQueue);
+
+  const serverAdapter = new ExpressAdapter();
+  serverAdapter.setBasePath('/admin/queues');
+
+  createBullBoard({
+    queues: [new BullMQAdapter(bullThumbnailsQueue.queue)],
+    serverAdapter,
+  });
+
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .use('/admin/queues', serverAdapter.getRouter() as RequestHandler);
 
   const port = configService.get('port', { infer: true }) ?? 3000;
 

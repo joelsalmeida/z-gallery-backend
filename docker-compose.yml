@@ -74,5 +74,20 @@ services:
       retries: 10
       start_period: 15s
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: z-gallery-worker
+    command: node -r tsconfig-paths/register -r ts-node/register src/main.worker.ts
+    depends_on:
+      - redis
+    volumes:
+      - ./:/usr/src/app:cached
+      - /usr/src/app/node_modules
+      - ./uploads:/usr/src/app/uploads
+    networks:
+      - z-gallery-net
+
 volumes:
   postgres-data:

@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
+    "start:worker": "node -r tsconfig-paths/register -r ts-node/register src/main.worker.ts",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "prima:migrate:dev": "npx prisma migrate dev",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
