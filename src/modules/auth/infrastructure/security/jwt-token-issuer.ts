@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { StringValue } from 'ms';
+import ms, { StringValue } from 'ms';
 import { User } from 'src/modules/user/domain/user';
 import {
   RefreshTokenExpiredException,
@@ -34,11 +34,13 @@ export class JwtTokenIssuer implements TokenIssuerPort {
       expiresIn: this.refreshExpiration,
     });
 
-    const SECONDS_120 = 120 * 1000;
+    const refreshInMilliseconds = ms(this.refreshExpiration);
+    const expirationDate = new Date(Date.now() + refreshInMilliseconds);
+
     const refreshTokenEntity = RefreshToken.create(
       refreshToken,
       user.id,
-      new Date(Date.now() + SECONDS_120),
+      expirationDate,
     );
 
     // TODO: Hash refresh tokens before storing. :)
