@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { RequestHandler } from 'express';
 import { AppModule } from './app.module';
 import type { AppConfig } from './config/app-config';
@@ -13,6 +14,13 @@ import { BullThumbnailQueue } from './queues/thumbnails/infrastructure/bull/bull
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.use(cookieParser());
+
+  app.enableCors({
+    origin: 'http://localhost:4000', // Frontend application.
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -55,7 +63,15 @@ async function bootstrap(): Promise<void> {
         bearerFormat: 'JWT',
         in: 'header',
       },
-      'access-token',
+      'access_token',
+    )
+    .addCookieAuth(
+      'refresh_token',
+      {
+        type: 'apiKey',
+        in: 'cookie',
+      },
+      'refresh-cookie',
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);

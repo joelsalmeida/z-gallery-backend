@@ -17,6 +17,10 @@ export type RefreshTokenData = { accessToken: string; refreshToken: string };
 // TODO: Remove this and use AuthenticatedRequest.
 export type JwtRequestContext = Request & { user: JwtPayload };
 
+type AuthCookies = {
+  refresh_token?: string;
+};
+
 /**
  * Express Request generic parameters
  *
@@ -84,6 +88,8 @@ export type AuthenticatedRequest<
   P = Record<string, string>,
   B = unknown,
   Q = Record<string, string>,
+  C = AuthCookies,
 > = Request<P, any, B, Q> & {
   user: JwtPayload;
+  cookies: C;
 };

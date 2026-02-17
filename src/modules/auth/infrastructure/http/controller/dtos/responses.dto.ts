@@ -12,9 +12,6 @@ export class AuthenticationResponseDto {
   @ApiProperty({ example: 'jwt-access-token' })
   access_token: string;
 
-  @ApiProperty({ example: 'jwt-refresh-token' })
-  refresh_token: string;
-
   @ApiProperty({ type: AuthenticatedUserDto })
   user: AuthenticatedUserDto;
 }
@@ -22,7 +19,17 @@ export class AuthenticationResponseDto {
 export class RefreshTokenResponseDto {
   @ApiProperty({ example: 'new-jwt-access-token' })
   access_token: string;
-
-  @ApiProperty({ example: 'new-jwt-refresh-token' })
-  refresh_token: string;
 }
+
+export const HEADERS = {
+  REFRESH_TOKEN: {
+    'Set-Cookie': {
+      description: 'HTTP-only refresh token cookie',
+      schema: {
+        type: 'string',
+        example:
+          'refresh_token=Ab1.Cd2.Ef3; Path=/; HttpOnly; Secure; SameSite=Lax',
+      },
+    },
+  },
+};
