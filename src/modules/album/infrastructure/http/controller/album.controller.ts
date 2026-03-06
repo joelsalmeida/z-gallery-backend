@@ -1,4 +1,8 @@
 import {
+  GetAlbumById,
+  GetAlbumByIdQuery,
+} from '@/modules/album/application/queries/get-album-by-id.ts';
+import {
   GetAlbums,
   GetAlbumsQuery,
 } from '@/modules/album/application/queries/get-albums';
@@ -40,6 +44,7 @@ export class AlbumController {
     private readonly createAlbumService: CreateAlbumUseCase,
     private readonly deleteAlbumService: DeleteAlbumUseCase,
     private readonly getAlbumsHandler: GetAlbums,
+    private readonly getAlbumByIdHandler: GetAlbumById,
   ) {}
 
   // =========================
@@ -88,5 +93,16 @@ export class AlbumController {
     @GetAuthUserId() ownerId: string,
   ): Promise<GetAlbumsResponseDto[]> {
     return await this.getAlbumsHandler.execute(new GetAlbumsQuery(ownerId));
+  }
+
+  // =========================
+  // Get album by Id
+  // =========================
+  @Get(':id')
+  @ApiOkResponse({ type: GetAlbumsResponseDto, isArray: true })
+  async getAlbumById(
+    @Param('id') id: string,
+  ): Promise<GetAlbumsResponseDto | null> {
+    return await this.getAlbumByIdHandler.execute(new GetAlbumByIdQuery(id));
   }
 }

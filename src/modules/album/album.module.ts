@@ -12,6 +12,10 @@ import { PrismaAlbumRepository } from '@/modules/album/infrastructure/persistenc
 import { PrismaService } from '@/modules/shared/prisma/prisma.service';
 import { Module } from '@nestjs/common';
 import { AlbumViewRepository } from './application/ports/out';
+import {
+  GetAlbumById,
+  GetAlbumByIdHandler,
+} from './application/queries/get-album-by-id.ts';
 import { GetAlbums, GetAlbumsHandler } from './application/queries/get-albums';
 import { PrismaAlbumViewRepository } from './infrastructure/persistence/prisma-album-view.repository';
 
@@ -36,6 +40,7 @@ import { PrismaAlbumViewRepository } from './infrastructure/persistence/prisma-a
       useClass: DeleteAlbumService,
     },
     { provide: GetAlbums, useClass: GetAlbumsHandler },
+    { provide: GetAlbumById, useClass: GetAlbumByIdHandler },
   ],
   exports: [AlbumRepository],
 })
