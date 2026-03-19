@@ -19,6 +19,7 @@ export type JwtRequestContext = Request & { user: JwtPayload };
 
 type AuthCookies = {
   refresh_token?: string;
+  access_token?: string;
 };
 
 /**

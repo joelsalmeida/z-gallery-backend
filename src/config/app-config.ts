@@ -1,5 +1,6 @@
 function loadEnv() {
   const env = {
+    NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
 
     JWT_SECRET: process.env.JWT_SECRET,
@@ -30,6 +31,7 @@ function loadEnv() {
 }
 
 export interface AppConfig {
+  environment: string;
   port: number;
 
   jwt: {
@@ -62,6 +64,7 @@ export const appConfig = (): AppConfig => {
   const env = loadEnv();
 
   return {
+    environment: env.NODE_ENV,
     port: parseInt(env.PORT, 10),
 
     jwt: {

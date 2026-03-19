@@ -16,6 +16,10 @@ class EnvironmentVariables {
    * APP
    * ======================= */
 
+  @IsString()
+  @IsNotEmpty()
+  NODE_ENV: string;
+
   @IsInt()
   @Min(1)
   @Max(65535)

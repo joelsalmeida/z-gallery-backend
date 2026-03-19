@@ -1,3 +1,4 @@
+import { appConfig } from '@/config/app-config';
 import {
   Body,
   Controller,
@@ -26,12 +27,21 @@ import { HEADERS } from './dtos/responses.dto';
 import { AuthExceptionFilter } from './filters/auth-exception.filter';
 
 const SEVEN_DAYS = ms('7d');
+const IN_PRODUCTION_ENVIRONMENT = appConfig().environment === 'production';
+
 const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   sameSite: 'lax',
-  secure: false,
+  secure: IN_PRODUCTION_ENVIRONMENT,
   path: '/',
   maxAge: SEVEN_DAYS,
+};
+
+const ACCESS_TOKEN_COOKIE_OPTIONS: CookieOptions = {
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: IN_PRODUCTION_ENVIRONMENT,
+  path: '/',
 };
 
 @ApiTags('auth')
@@ -76,6 +86,7 @@ export class AuthController {
     const authData = await this.authenticateUserService.execute(input);
 
     this.setRefreshTokenCookie(response, authData.refreshToken);
+    this.setAccessTokenCookie(response, authData.accessToken);
 
     return {
       access_token: authData.accessToken,
@@ -104,6 +115,7 @@ export class AuthController {
     });
 
     this.setRefreshTokenCookie(response, data.refreshToken);
+    this.setAccessTokenCookie(response, data.accessToken);
 
     return {
       access_token: data.accessToken,
@@ -112,5 +124,9 @@ export class AuthController {
 
   private setRefreshTokenCookie(res: Response, refreshToken: string) {
     res.cookie('refresh_token', refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+  }
+
+  private setAccessTokenCookie(res: Response, accessToken: string) {
+    res.cookie('access_token', accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
   }
 }
