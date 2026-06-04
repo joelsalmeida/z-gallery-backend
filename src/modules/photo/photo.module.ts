@@ -1,3 +1,4 @@
+import { SseRealtimeGateway } from '@/modules/shared/realtime/application/services/sse-realtime.gateway';
 import { ThumbnailQueueModule } from '@/queues/thumbnails/thumbnail-queue.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -10,6 +11,15 @@ import {
   PhotoAccessPolicyPort,
   PhotoViewRepository,
 } from './application/ports/out';
+
+import { RealtimeGatewayPort } from '../shared/realtime/application/ports';
+import {
+  REALTIME_EVENT_HANDLERS,
+  RealtimeEventHandler,
+} from '../shared/realtime/realtime-event-handler';
+import { RealtimeEventHandlerRegistry } from '../shared/realtime/realtime-event-handler-registry';
+import { RedisRealtimeEventSubscriber } from '../shared/realtime/redis-realtime-event.subscriber';
+import { ThumbnailGeneratedHandler } from './application/event-handlers/thumbnail-generated.event-handler';
 import { GetPhoto, GetPhotoHandler } from './application/queries/get-photo';
 import {
   GetPhotoFile,
@@ -33,13 +43,14 @@ import {
   UploadPhotoUseCase,
 } from './application/use-cases';
 import { PhotoController } from './infrastructure/http/controller/photo.controller';
+import { RealtimeController } from './infrastructure/http/controller/realtime-notifier.controller';
 import { PrismaPhotoViewRepository } from './infrastructure/persistence';
 import { PhotoAccessPolicy } from './infrastructure/policies/photo-access.policy';
 import { PhotoPortModule } from './photo-port.module';
 
 @Module({
   imports: [ConfigModule, AlbumModule, ThumbnailQueueModule, PhotoPortModule],
-  controllers: [PhotoController],
+  controllers: [RealtimeController, PhotoController],
   providers: [
     {
       provide: PhotoViewRepository,
@@ -80,6 +91,26 @@ import { PhotoPortModule } from './photo-port.module';
     {
       provide: GetPhoto,
       useClass: GetPhotoHandler,
+    },
+
+    ThumbnailGeneratedHandler,
+    {
+      provide: REALTIME_EVENT_HANDLERS,
+      useFactory: (...handlers: RealtimeEventHandler[]) => handlers,
+      inject: [ThumbnailGeneratedHandler],
+    },
+    {
+      provide: RealtimeEventHandlerRegistry,
+      useFactory: (handlers: RealtimeEventHandler[]) =>
+        new RealtimeEventHandlerRegistry(handlers),
+      inject: [REALTIME_EVENT_HANDLERS],
+    },
+
+    SseRealtimeGateway,
+    RedisRealtimeEventSubscriber,
+    {
+      provide: RealtimeGatewayPort,
+      useExisting: SseRealtimeGateway,
     },
     PhotoUploadedEventHandler,
     PhotoDeletedEventHandler,
