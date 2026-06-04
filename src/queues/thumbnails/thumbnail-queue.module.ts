@@ -4,6 +4,7 @@ import {
 } from '@/modules/photo/application/ports/out';
 import { LocalThumbnailStorage } from '@/modules/photo/infrastructure/storage';
 import { PhotoPortModule } from '@/modules/photo/photo-port.module';
+import { RealtimePublisherModule } from '@/modules/shared/realtime/realtime-publisher.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { BullThumbnailQueue } from './infrastructure/bull/bull-thumbnail.queue';
@@ -16,6 +17,7 @@ import { THUMBNAIL_QUEUE } from './thumbnail.queue.contract';
   imports: [
     BullModule.registerQueue({ name: THUMBNAIL_QUEUE }),
     PhotoPortModule,
+    RealtimePublisherModule,
   ],
   providers: [
     ThumbnailProcessor,

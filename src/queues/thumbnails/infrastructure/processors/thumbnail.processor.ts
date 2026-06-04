@@ -3,7 +3,9 @@ import {
   PhotoStoragePort,
   ThumbnailStoragePort,
 } from '@/modules/photo/application/ports/out';
+import { ThumbnailGeneratedIntegrationEvent } from '@/modules/photo/domain/events/thumbnail-generated.integration-event';
 import { PhotoId } from '@/modules/photo/domain/value-objects';
+import { RealtimeEventPublisherPort } from '@/modules/shared/realtime/application/ports';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { BeforeApplicationShutdown } from '@nestjs/common';
 import { Job } from 'bullmq';
@@ -23,6 +25,7 @@ export class ThumbnailProcessor
     private readonly photoStorage: PhotoStoragePort,
     private readonly thumbnailGenerator: ThumbnailGeneratorPort,
     private readonly thumbnailStorage: ThumbnailStoragePort,
+    private readonly publisher: RealtimeEventPublisherPort,
   ) {
     super();
   }
@@ -49,6 +52,10 @@ export class ThumbnailProcessor
 
     photo.attachThumbnail(thumbLocation);
     await this.photoRepository.update(photo);
+
+    await this.publisher.publish(
+      new ThumbnailGeneratedIntegrationEvent(photo.albumId, photo.id),
+    );
   }
 
   async beforeApplicationShutdown(signal: string) {
