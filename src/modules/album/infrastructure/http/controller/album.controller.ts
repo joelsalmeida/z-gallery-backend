@@ -36,7 +36,7 @@ import { CreateAlbumInput, CreateAlbumResponseDto } from './dtos';
 import { GetAlbumsResponseDto } from './dtos/responses.dto';
 
 @ApiTags('albums')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth('access_token')
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AlbumController {

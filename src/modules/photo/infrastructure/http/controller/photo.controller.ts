@@ -59,7 +59,7 @@ import {
 } from './dtos/responses.dto';
 
 @ApiTags('photos')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth('access_token')
 @UseGuards(JwtAuthGuard, AlbumOwnershipGuard)
 @Controller()
 export class PhotoController {
