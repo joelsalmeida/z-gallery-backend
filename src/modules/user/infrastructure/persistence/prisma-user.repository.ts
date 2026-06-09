@@ -7,6 +7,15 @@ import { Email, HashedPassword, UserId } from '../../domain/value-objects';
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prismaService: PrismaService) {}
+  async update(user: User): Promise<void> {
+    await this.prismaService.user.update({
+      where: { id: user.id.toValue() },
+      data: {
+        password: user.password.toValue(),
+        email: user.email.toValue(),
+      },
+    });
+  }
 
   async save(user: User): Promise<void> {
     await this.prismaService.user.create({
