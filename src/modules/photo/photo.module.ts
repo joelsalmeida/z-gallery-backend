@@ -10,6 +10,7 @@ import { PhotoUploadedEventHandler } from './application/event-handlers/photo-up
 import {
   PhotoAccessPolicyPort,
   PhotoViewRepository,
+  PredominantColorExtractorPort,
 } from './application/ports/out';
 
 import { RealtimeGatewayPort } from '../shared/realtime/application/ports';
@@ -44,6 +45,7 @@ import {
 } from './application/use-cases';
 import { PhotoController } from './infrastructure/http/controller/photo.controller';
 import { RealtimeController } from './infrastructure/http/controller/realtime-notifier.controller';
+import { SharpPredominantColorExtractorAdapter } from './infrastructure/media/sharp-predominant-color-extractor';
 import { PrismaPhotoViewRepository } from './infrastructure/persistence';
 import { PhotoAccessPolicy } from './infrastructure/policies/photo-access.policy';
 import { PhotoPortModule } from './photo-port.module';
@@ -52,6 +54,10 @@ import { PhotoPortModule } from './photo-port.module';
   imports: [ConfigModule, AlbumModule, ThumbnailQueueModule, PhotoPortModule],
   controllers: [RealtimeController, PhotoController],
   providers: [
+    {
+      provide: PredominantColorExtractorPort,
+      useClass: SharpPredominantColorExtractorAdapter,
+    },
     {
       provide: PhotoViewRepository,
       useClass: PrismaPhotoViewRepository,

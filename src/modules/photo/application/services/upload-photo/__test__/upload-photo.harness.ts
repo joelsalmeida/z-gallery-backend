@@ -1,6 +1,10 @@
 import { AlbumAccessPolicyPort } from '@/modules/album/application/ports/out';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PhotoRepository, PhotoStoragePort } from '../../../ports/out';
+import {
+  PhotoRepository,
+  PhotoStoragePort,
+  PredominantColorExtractorPort,
+} from '../../../ports/out';
 import { UploadPhotoService } from '../../upload-photo/upload-photo.service';
 
 export interface DomainEventEmitter {
@@ -13,6 +17,7 @@ interface UploadPhotoHarness {
   readonly photoStorage: jest.Mocked<PhotoStoragePort>;
   readonly accessPolicy: jest.Mocked<AlbumAccessPolicyPort>;
   readonly eventEmitter: DomainEventEmitter;
+  readonly predominantColorExtractor: jest.Mocked<PredominantColorExtractorPort>;
 }
 
 export const buildUploadPhotoHarness = (): UploadPhotoHarness => {
@@ -31,6 +36,11 @@ export const buildUploadPhotoHarness = (): UploadPhotoHarness => {
     delete: jest.fn(),
   };
 
+  const predominantColorExtractor: jest.Mocked<PredominantColorExtractorPort> =
+    {
+      extract: jest.fn(),
+    };
+
   const accessPolicy: jest.Mocked<AlbumAccessPolicyPort> = {
     canAccessAlbum: jest.fn(),
   };
@@ -42,6 +52,7 @@ export const buildUploadPhotoHarness = (): UploadPhotoHarness => {
     photoStorage,
     accessPolicy,
     eventEmitter as unknown as EventEmitter2,
+    predominantColorExtractor,
   );
 
   return {
@@ -50,5 +61,6 @@ export const buildUploadPhotoHarness = (): UploadPhotoHarness => {
     photoStorage,
     accessPolicy,
     eventEmitter,
+    predominantColorExtractor,
   };
 };

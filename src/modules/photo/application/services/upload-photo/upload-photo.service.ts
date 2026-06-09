@@ -3,6 +3,7 @@ import { AlbumId } from '@/modules/album/domain/value-objects';
 import {
   PhotoRepository,
   PhotoStoragePort,
+  PredominantColorExtractorPort,
 } from '@/modules/photo/application/ports/out';
 import { UploadPhotoUseCase } from '@/modules/photo/application/use-cases';
 import { UploadPhotoCommand } from '@/modules/photo/application/use-cases/commands';
@@ -27,18 +28,21 @@ export class UploadPhotoService implements UploadPhotoUseCase {
     private readonly photoStorage: PhotoStoragePort,
     private readonly accessPolicy: AlbumAccessPolicyPort,
     private eventEmitter: EventEmitter2,
+    private readonly predominantColorExtractor: PredominantColorExtractorPort,
   ) {}
 
   async execute(command: UploadPhotoCommand): Promise<Photo> {
     const albumId = AlbumId.restore(command.albumId);
     const userId = UserId.restore(command.ownerId);
 
-    const canAccess = await this.accessPolicy.canAccessAlbum(albumId, userId);
-    if (!canAccess) throw new ForbiddenException();
+    await this.assertAlbumAccess(albumId, userId);
 
-    const photoLocation = await this.photoStorage.store(command.photoFile);
-    const photo = this.createPhoto(photoLocation, command);
+    const [photoLocation, predominantColor] = await Promise.all([
+      this.photoStorage.store(command.photoFile),
+      this.predominantColorExtractor.extract(command.photoFile.buffer),
+    ]);
 
+    const photo = this.createPhoto(photoLocation, command, predominantColor);
     await this.photoRepository.save(photo);
 
     this.eventEmitter.emit(
@@ -49,14 +53,23 @@ export class UploadPhotoService implements UploadPhotoUseCase {
     return photo;
   }
 
+  private async assertAlbumAccess(albumId: AlbumId, userId: UserId) {
+    const canAccess = await this.accessPolicy.canAccessAlbum(albumId, userId);
+    if (!canAccess) throw new ForbiddenException();
+  }
+
   // TODO: Consider using a factory.
-  private createPhoto(location: PhotoLocation, command: UploadPhotoCommand) {
+  private createPhoto(
+    location: PhotoLocation,
+    command: UploadPhotoCommand,
+    predominantColor: Color,
+  ) {
     return Photo.create(
       AlbumId.restore(command.albumId),
       PhotoTitle.create(command.title),
       PhotoDescription.create(command.description),
       FileSize.fromBytes(command.photoFile.size),
-      Color.fromHex('#777777'), // TODO: FIX THIS.
+      predominantColor,
       location,
       PhotoCreationDate.fromNow(),
     );

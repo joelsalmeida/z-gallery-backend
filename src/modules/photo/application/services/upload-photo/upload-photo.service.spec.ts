@@ -1,6 +1,6 @@
 import { PhotoUploadedEvent } from '@/modules/photo/domain/events';
 import { Photo } from '@/modules/photo/domain/photo';
-import { PhotoLocation } from '@/modules/photo/domain/value-objects';
+import { Color, PhotoLocation } from '@/modules/photo/domain/value-objects';
 import { buildUploadPhotoFixture, buildUploadPhotoHarness } from './__test__';
 
 const arrangeUntilPersistence = (
@@ -84,6 +84,33 @@ describe('UploadPhotoService – execute', () => {
       expect(photo.title.toValue()).toBe(fixture.command.title);
       expect(photo.description.toValue()).toBe(fixture.command.description);
       expect(photo.size.toValue()).toBe(fixture.photoFile.size);
+    });
+
+    it('extracts the predominant color from the uploaded file', async () => {
+      arrangeUntilPersistence(harness, fixture);
+
+      harness.accessPolicy.canAccessAlbum.mockResolvedValueOnce(true);
+
+      await harness.service.execute(fixture.command);
+
+      expect(harness.predominantColorExtractor.extract).toHaveBeenCalledWith(
+        fixture.photoFile.buffer,
+      );
+    });
+
+    it('creates the photo with the predominant color returned by the extractor', async () => {
+      arrangeUntilPersistence(harness, fixture);
+
+      const predominantColor = Color.fromHex('ff0000');
+
+      harness.accessPolicy.canAccessAlbum.mockResolvedValueOnce(true);
+      harness.predominantColorExtractor.extract.mockResolvedValueOnce(
+        predominantColor,
+      );
+
+      const photo = await harness.service.execute(fixture.command);
+
+      expect(photo.predominantColor.toValue()).toBe(predominantColor.toValue());
     });
 
     it('creates the photo with the location returned by storage', async () => {
