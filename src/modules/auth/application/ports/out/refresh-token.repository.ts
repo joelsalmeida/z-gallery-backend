@@ -6,4 +6,6 @@ export abstract class RefreshTokenRepository {
   abstract find(refreshToken: string): Promise<RefreshToken | null>;
 
   abstract delete(refreshToken: RefreshToken): Promise<void>;
+
+  abstract deleteAllByUserId(userId: string): Promise<void>;
 }
