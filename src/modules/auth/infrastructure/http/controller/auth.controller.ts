@@ -14,7 +14,10 @@ import ms from 'ms';
 import { RefreshTokenUserUseCase } from 'src/modules/auth/application/use-cases/refresh-token.use-case';
 import {
   AuthenticateUserUseCase,
+  LogOutUseCase,
   RegisterUserUseCase,
+  RequestPasswordResetUseCase,
+  ResetPasswordUseCase,
 } from '../../../application/use-cases';
 import { RefreshToken } from './decorators/refresh-token.decorator';
 import {
@@ -23,6 +26,10 @@ import {
   RefreshTokenResponseDto,
   RegisterUserInput,
 } from './dtos';
+import {
+  RequestPasswordResetInput,
+  ResetPasswordInput,
+} from './dtos/inputs.dto';
 import { HEADERS } from './dtos/responses.dto';
 import { AuthExceptionFilter } from './filters/auth-exception.filter';
 
@@ -52,6 +59,9 @@ export class AuthController {
     private readonly registerUserService: RegisterUserUseCase,
     private readonly authenticateUserService: AuthenticateUserUseCase,
     private readonly refreshTokenService: RefreshTokenUserUseCase,
+    private readonly requestPasswordResetService: RequestPasswordResetUseCase,
+    private readonly resetPasswordService: ResetPasswordUseCase,
+    private readonly logoutService: LogOutUseCase,
   ) {}
 
   // =========================
@@ -95,6 +105,21 @@ export class AuthController {
   }
 
   // =========================
+  // Log out
+  // =========================
+  @Post('logout')
+  async logout(
+    @RefreshToken() refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (refreshToken) {
+      await this.logoutService.execute({ refreshToken });
+    }
+
+    this.clearAuthCookies(res);
+  }
+
+  // =========================
   // Refresh
   // =========================
   @Post('refresh')
@@ -122,11 +147,34 @@ export class AuthController {
     };
   }
 
+  // =========================
+  // Forgot Password
+  // =========================
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() input: RequestPasswordResetInput,
+  ): Promise<void> {
+    await this.requestPasswordResetService.execute(input);
+  }
+
+  // =========================
+  // Reset Password
+  // =========================
+  @Post('reset-password')
+  async resetPassword(@Body() input: ResetPasswordInput): Promise<void> {
+    await this.resetPasswordService.execute(input);
+  }
+
   private setRefreshTokenCookie(res: Response, refreshToken: string) {
     res.cookie('refresh_token', refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
   }
 
   private setAccessTokenCookie(res: Response, accessToken: string) {
     res.cookie('access_token', accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+  }
+
+  private clearAuthCookies(res: Response) {
+    res.clearCookie('refresh_token', REFRESH_TOKEN_COOKIE_OPTIONS);
+    res.clearCookie('access_token', ACCESS_TOKEN_COOKIE_OPTIONS);
   }
 }

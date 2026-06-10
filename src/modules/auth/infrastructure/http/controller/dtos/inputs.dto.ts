@@ -31,3 +31,22 @@ export class RefreshTokenInput {
   @IsString()
   readonly refreshToken: string;
 }
+
+export class RequestPasswordResetInput {
+  @ApiProperty({ example: 'user@email.com' })
+  @IsNotEmpty()
+  @IsEmail()
+  readonly email: string;
+}
+
+export class ResetPasswordInput {
+  @ApiProperty({ example: 'password-reset-token' })
+  @IsNotEmpty()
+  @IsString()
+  readonly token: string;
+
+  @ApiProperty({ example: 'new-strong-password' })
+  @IsNotEmpty()
+  @IsString()
+  readonly newPassword: string;
+}
