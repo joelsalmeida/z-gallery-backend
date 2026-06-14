@@ -48,8 +48,8 @@ export class PasswordResetToken {
   // DOMAIN BEHAVIOR (ONLY PUBLIC MUTATION)
   // =========================
 
-  use(userId: UserId): void {
-    this.assertUsable(userId);
+  use(): void {
+    this.assertUsable();
     this._usedAt = new Date();
   }
 
@@ -57,16 +57,14 @@ export class PasswordResetToken {
   // INTERNAL RULES
   // =========================
 
-  private assertUsable(userId: UserId): void {
+  private assertUsable(): void {
+    // TODO: PasswordResetTokenAlreadyUsedException
     if (this._usedAt !== null) {
       throw new UnauthorizedException();
     }
 
+    // TODO: PasswordResetTokenExpiredException
     if (this.isExpired()) {
-      throw new UnauthorizedException();
-    }
-
-    if (!this._userId.equals(userId)) {
       throw new UnauthorizedException();
     }
   }

@@ -1,8 +1,8 @@
-import { Email } from '@/modules/user/domain/value-objects';
+export interface PasswordResetEmailData {
+  email: string;
+  token: string;
+}
 
 export abstract class EmailSenderPort {
-  abstract sendPasswordResetEmail(
-    email: Email,
-    resetUrl: string,
-  ): Promise<void>;
+  abstract sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void>;
 }

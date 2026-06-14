@@ -1,3 +1,3 @@
-export class LogOutCommand {
+export class LogoutCommand {
   constructor(readonly refreshToken: string) {}
 }

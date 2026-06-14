@@ -8,4 +8,6 @@ export abstract class PasswordResetTokenRepository {
   abstract find(token: string): Promise<PasswordResetToken | null>;
 
   abstract delete(token: PasswordResetToken): Promise<void>;
+
+  abstract deleteAllByUserId(userId: string): Promise<void>;
 }
