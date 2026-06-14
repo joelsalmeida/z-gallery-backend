@@ -47,4 +47,10 @@ export class PrismaPasswordResetTokenRepository implements PasswordResetTokenRep
       where: { token: token.toValue() },
     });
   }
+
+  async deleteAllByUserId(userId: string): Promise<void> {
+    await this.prisma.passwordResetToken.deleteMany({
+      where: { userId },
+    });
+  }
 }

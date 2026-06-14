@@ -14,7 +14,7 @@ import ms from 'ms';
 import { RefreshTokenUserUseCase } from 'src/modules/auth/application/use-cases/refresh-token.use-case';
 import {
   AuthenticateUserUseCase,
-  LogOutUseCase,
+  LogoutUseCase,
   RegisterUserUseCase,
   RequestPasswordResetUseCase,
   ResetPasswordUseCase,
@@ -61,7 +61,7 @@ export class AuthController {
     private readonly refreshTokenService: RefreshTokenUserUseCase,
     private readonly requestPasswordResetService: RequestPasswordResetUseCase,
     private readonly resetPasswordService: ResetPasswordUseCase,
-    private readonly logoutService: LogOutUseCase,
+    private readonly logoutService: LogoutUseCase,
   ) {}
 
   // =========================
