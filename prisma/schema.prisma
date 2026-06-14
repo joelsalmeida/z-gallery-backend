@@ -20,14 +20,27 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
-  albums        Album[]
+  refreshTokens       RefreshToken[]
+  albums              Album[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model RefreshToken {
   token     String   @id
   userId    String
   expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  token     String    @id
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
 

@@ -19,6 +19,8 @@ function loadEnv() {
     PHOTO_STORAGE_PATH: process.env.PHOTO_STORAGE_PATH,
     PHOTOS_STORAGE_SUBFOLDER: process.env.PHOTOS_STORAGE_SUBFOLDER,
     THUMBNAILS_STORAGE_SUBFOLDER: process.env.THUMBNAILS_STORAGE_SUBFOLDER,
+
+    WEB_CLIENT: process.env.WEB_CLIENT,
   };
 
   for (const [key, value] of Object.entries(env)) {
@@ -58,6 +60,8 @@ export interface AppConfig {
     photosSubfolder: string;
     thumbnailsSubfolder: string;
   };
+
+  webClient: string;
 }
 
 export const appConfig = (): AppConfig => {
@@ -91,5 +95,7 @@ export const appConfig = (): AppConfig => {
       host: env.REDIS_HOST,
       port: parseInt(env.REDIS_PORT, 10),
     },
+
+    webClient: env.WEB_CLIENT,
   };
 };
